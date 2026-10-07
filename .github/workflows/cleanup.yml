@@ -1,0 +1,31 @@
+name: cleanup-old-audio
+
+on:
+  workflow_dispatch:
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 删除所有不带 v2- 前缀的旧音频
+        run: |
+          git config user.name "cleanup-bot"
+          git config user.email "cleanup-bot@users.noreply.github.com"
+          n=0
+          for f in *.mp3; do
+            case "$f" in
+              v2-*) ;;
+              *) git rm "$f"; n=$((n+1)) ;;
+            esac
+          done
+          echo "准备删除 $n 个文件"
+          if [ "$n" -gt 0 ]; then
+            git commit -m "删除 $n 个旧音频（已被 v2- 版本取代）"
+            git push
+          else
+            echo "没有需要删除的文件"
+          fi
